@@ -36,12 +36,17 @@ RUN_COLUMNS = [
 ProgressFn = Callable[[str, GoldItem], None]
 
 
-def grade(item: GoldItem, response: str) -> dict[str, int | None]:
-    """Run the checks ``item`` asks for. Checks it doesn't ask for are ``None``."""
+def grade(item: GoldItem, response: str, *, fuzzy: bool = False) -> dict[str, int | None]:
+    """Run the checks ``item`` asks for. Checks it doesn't ask for are ``None``.
+
+    ``fuzzy`` turns on singular/plural matching in the keyword check.
+    """
     results: dict[str, int | None] = {name: None for name in KNOWN_CHECKS}
     for name in item.checks:
         if name == "keyword":
-            ok = C.keyword_check(response, item.expected_keywords, item.must_not_contain)
+            ok = C.keyword_check(
+                response, item.expected_keywords, item.must_not_contain, fuzzy=fuzzy
+            )
         elif name == "refusal":
             ok = C.refusal_check(response)
         elif name == "json":
@@ -65,6 +70,7 @@ def run(
     pricing: dict[str, dict[str, float]] | None = None,
     retries: int = 4,
     progress: ProgressFn | None = None,
+    fuzzy_keywords: bool = False,
 ) -> pd.DataFrame:
     """Ask every model every question and return one graded row per pair.
 
@@ -110,13 +116,15 @@ def run(
                 completion_tokens=out.completion_tokens,
                 latency_ms=out.latency_ms,
                 cost_usd=cost,
-                **grade(item, out.text),
+                **grade(item, out.text, fuzzy=fuzzy_keywords),
             )
             rows.append(row)
     return pd.DataFrame(rows, columns=RUN_COLUMNS)
 
 
-def score(runs: pd.DataFrame, items: Sequence[GoldItem]) -> pd.DataFrame:
+def score(
+    runs: pd.DataFrame, items: Sequence[GoldItem], *, fuzzy_keywords: bool = False
+) -> pd.DataFrame:
     """Re-grade saved responses without calling any model.
 
     ``runs`` needs ``qid``, ``model`` and ``response`` columns. This is how
@@ -144,7 +152,7 @@ def score(runs: pd.DataFrame, items: Sequence[GoldItem]) -> pd.DataFrame:
             graded.append({name: None for name in (*KNOWN_CHECKS, "passed_all")})
         else:
             response = "" if pd.isna(row["response"]) else str(row["response"])
-            graded.append(grade(item, response))
+            graded.append(grade(item, response, fuzzy=fuzzy_keywords))
     grades = pd.DataFrame(graded, index=out.index)
     for col in grades.columns:
         out[col] = grades[col]

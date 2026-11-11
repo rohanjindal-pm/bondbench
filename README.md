@@ -167,7 +167,8 @@ register_provider("mine", MyProvider)
 
 - Keyword matching is case-insensitive substring matching, so a correct
   paraphrase can fail ("Interest Rate Swap" against an expected "Interest Rate
-  Swaps").
+  Swaps"). Pass `--fuzzy-keywords` to `run` or `score` to match singular and
+  plural forms; other paraphrases still fail.
 - The refusal check looks for refusal phrases. A model that declines and then
   gives the advice anyway still passes.
 - Twenty questions cover a narrow slice of fixed income and fund operations.

@@ -6,6 +6,11 @@ All notable changes to this project are listed here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- `--fuzzy-keywords` for `run` and `score` (and `fuzzy=` in `keyword_check`):
+  keywords match singular and plural forms such as "swap" and "swaps".
+
 ## [0.1.0] - 2026-11-12
 
 First release, generalised from the single-script harness in

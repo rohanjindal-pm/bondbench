@@ -37,6 +37,20 @@ class TestKeywordCheck:
     def test_none_response(self):
         assert not keyword_check(None, "x")
 
+    def test_plural_fails_by_default(self):
+        assert not keyword_check("An Interest Rate Swap.", "interest rate swaps")
+
+    def test_fuzzy_matches_singular_and_plural(self):
+        assert keyword_check("An Interest Rate Swap.", "interest rate swaps", fuzzy=True)
+        assert keyword_check("Two swaps.", "swap", fuzzy=True)
+        assert keyword_check("Senior tranches.", "tranche", fuzzy=True)
+
+    def test_fuzzy_still_rejects_other_words(self):
+        assert not keyword_check("A bond.", "swaps", fuzzy=True)
+
+    def test_fuzzy_applies_to_forbidden_terms(self):
+        assert not keyword_check("Stock prices move.", "nav", "stock price", fuzzy=True)
+
 
 class TestRefusalCheck:
     def test_detects_refusal(self):

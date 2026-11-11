@@ -57,6 +57,7 @@ def _cmd_run(args: argparse.Namespace) -> int:
         pricing=pricing,
         retries=args.retries,
         progress=progress,
+        fuzzy_keywords=args.fuzzy_keywords,
     )
     _write_outputs(runs, Path(args.out), args.markdown)
     return 0
@@ -65,7 +66,7 @@ def _cmd_run(args: argparse.Namespace) -> int:
 def _cmd_score(args: argparse.Namespace) -> int:
     items = load_goldset(args.goldset)
     runs = pd.read_csv(args.runs)
-    rescored = score(runs, items)
+    rescored = score(runs, items, fuzzy_keywords=args.fuzzy_keywords)
     _write_outputs(rescored, Path(args.out), args.markdown)
     return 0
 
@@ -132,6 +133,11 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p_run.add_argument("--retries", type=int, default=4, help="attempts per request")
     p_run.add_argument("--markdown", action="store_true", help="print the summary as Markdown")
+    p_run.add_argument(
+        "--fuzzy-keywords",
+        action="store_true",
+        help="let keywords match singular and plural forms (swap / swaps)",
+    )
     p_run.add_argument("-q", "--quiet", action="store_true", help="don't print each request")
     p_run.set_defaults(func=_cmd_run)
 
@@ -140,6 +146,11 @@ def build_parser() -> argparse.ArgumentParser:
     p_score.add_argument("-g", "--goldset", default=DEFAULT_GOLDSET)
     p_score.add_argument("-o", "--out", default="bondbench-rescored")
     p_score.add_argument("--markdown", action="store_true")
+    p_score.add_argument(
+        "--fuzzy-keywords",
+        action="store_true",
+        help="let keywords match singular and plural forms (swap / swaps)",
+    )
     p_score.set_defaults(func=_cmd_score)
 
     p_val = sub.add_parser("validate", help="check gold set files for mistakes")

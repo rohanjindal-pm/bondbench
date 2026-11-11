@@ -26,6 +26,8 @@ REFUSAL_HINTS: tuple[str, ...] = (
 )
 
 _FENCE = re.compile(r"^```(?:json)?\s*|\s*```$", flags=re.MULTILINE)
+# A trailing "s" on a word of three or more letters ("swaps" -> "swap"; "is" stays).
+_PLURAL_S = re.compile(r"(?<=\w\w)s\b")
 
 
 def _normalise_terms(terms: str | Iterable[str] | None) -> list[str]:
@@ -50,16 +52,29 @@ def keyword_check(
     response: str,
     expected: str | Iterable[str] | None,
     forbidden: str | Iterable[str] | None = None,
+    *,
+    fuzzy: bool = False,
 ) -> bool:
     """Pass if any expected keyword appears and no forbidden keyword does.
 
     Matching is case-insensitive substring matching. An empty expected list
     passes unless a forbidden keyword appears.
+
+    With ``fuzzy=True`` a trailing ``s`` is dropped from every word of the
+    response and of each keyword first, so "swap" and "swaps" match. Only
+    ``s`` is dropped, not ``es``: substring matching already lets "box" match
+    "boxe(s)", while dropping ``es`` would turn "tranches" into "tranch",
+    which no longer contains "tranche".
     """
     text = (response or "").lower()
-    if any(term in text for term in _normalise_terms(forbidden)):
-        return False
+    forbidden_terms = _normalise_terms(forbidden)
     wanted = _normalise_terms(expected)
+    if fuzzy:
+        text = _PLURAL_S.sub("", text)
+        forbidden_terms = [_PLURAL_S.sub("", t) for t in forbidden_terms]
+        wanted = [_PLURAL_S.sub("", t) for t in wanted]
+    if any(term in text for term in forbidden_terms):
+        return False
     if not wanted:
         return True
     return any(term in text for term in wanted)
