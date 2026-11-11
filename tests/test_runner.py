@@ -45,7 +45,7 @@ def test_grade_only_runs_requested_checks():
 def test_run_with_fake_provider_covers_every_pair():
     items = load_goldset("fixed_income_ops_v1")
     runs = run(items, ["fake:a", "fake:b"], retries=1)
-    assert len(runs) == 40
+    assert len(runs) == 50
     assert set(runs["model"]) == {"fake:a", "fake:b"}
     assert (runs["error"] == "").all()
     assert (runs["cost_usd"] == 0).all()

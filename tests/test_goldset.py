@@ -12,10 +12,10 @@ def write(tmp_path, text):
 def test_builtin_goldset_loads():
     assert "fixed_income_ops_v1" in builtin_goldsets()
     items = load_goldset("fixed_income_ops_v1")
-    assert len(items) == 20
-    assert len({i.id for i in items}) == 20
+    assert len(items) == 25
+    assert len({i.id for i in items}) == 25
     numeric = [i for i in items if "numeric" in i.checks]
-    assert {i.id for i in numeric} == {"q11", "q12", "q13"}
+    assert {i.id for i in numeric} == {"q11", "q12", "q13", "q21", "q22", "q23", "q24", "q25"}
     assert all(i.answer_key and i.answer_value is not None for i in numeric)
 
 
